@@ -8,10 +8,10 @@
 
 import UIKit
 import RxSwift
-import RxAlamofire
 
 class ViewController: UIViewController {
 
+    @IBOutlet weak var transitionButton: UIButton!
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var imageContainer: UIView!
     @IBOutlet weak var backImageView: UIImageView!
@@ -27,9 +27,9 @@ class ViewController: UIViewController {
         let alert = UIAlertController(title: "전환 시간", message: "이미지 전환 시간을 선택해주세요.", preferredStyle: .alert)
 
         for i in 1...10 {
-            alert.addAction(UIAlertAction(title: "\(i)초", style: i == (try? self.viewModel?.transitionSec.value()) ? .destructive : .default, handler: { (_) in
-                self.viewModel?.updateTransitionSec(i)
-                sender.setTitle("전환 시간 : \(i)초", for: .normal)
+            alert.addAction(UIAlertAction(title: "\(i)초", style: i == self.viewModel?.transitionSec ? .destructive : .default, handler: { [weak self] (_) in
+                self?.viewModel?.transitionSec = i
+                self?.updateButton(transitionSec: i)
             }))
         }
 
@@ -73,6 +73,11 @@ extension ViewController {
     private func setupView() {
         self.scrollView.minimumZoomScale = 1
         self.scrollView.maximumZoomScale = 3
+        self.updateButton(transitionSec: Int.defaultTransitionSec)
+    }
+    
+    private func updateButton(transitionSec: Int) {
+        self.transitionButton.setTitle("전환 시간 : \(transitionSec)초", for: .normal)
     }
     
     private func changeToImage(_ image: UIImage) {

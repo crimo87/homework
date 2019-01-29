@@ -93,6 +93,7 @@
                         <outlet property="frontImageView" destination="cNc-84-lLZ" id="8nT-E0-cUA"/>
                         <outlet property="imageContainer" destination="hIp-cB-VFE" id="PJq-aw-iBr"/>
                         <outlet property="scrollView" destination="efK-cB-hQU" id="yxl-CG-JKn"/>
+                        <outlet property="transitionButton" destination="CFp-Jt-Lms" id="Ouo-jM-e79"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
