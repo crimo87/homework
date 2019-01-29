@@ -64,11 +64,11 @@ class ImageViewModel: ViewModel {
         
         Observable<Int>.interval(RxTimeInterval(Int.fetchInterval), scheduler: MainScheduler.instance)
             .flatMap({ _ in self.model.map { Observable.just($0) } ?? Observable.empty() })
-            .flatMap({ model in Observable.from(model.items) })
-            .filter({ item in self.canDownloadImage(url: item.media.m) })
-            .map({ item in URL(string: item.media.m) })
+            .do(onNext: { model in if model.items.count < Int.maxPreloadCount { self.request() } })
+            .flatMap({ Observable.from($0.items) })
+            .filter({ self.canDownloadImage(url: $0.media.m) })
+            .map({ URL(string: $0.media.m) })
             .flatMap({ url in url.map ({ Observable.just($0) }) ?? Observable.empty() })
-            .filter({ _ in self.images.count + self.requests.count < Int.maxPreloadCount })
             .do(onNext: { url in self.requests.insert(url.absoluteString) })
             .observeOn(ConcurrentDispatchQueueScheduler(qos: DispatchQoS.background))
             .flatMap({ url in SessionManager.default.rx.responseData(.get, url) })
@@ -82,14 +82,15 @@ class ImageViewModel: ViewModel {
                     self.images.append((deletedUrl, image))
                     self.model?.items.removeAll(where: { $0.media.m == deletedUrl })
                 }
-
-                if self.model?.items.count == 0 { self.request() }
             })
             .disposed(by: self.disposeBag)
     }
 
     private func canDownloadImage(url: String) -> Bool{
-        return self.images.count + self.requests.count < Int.maxPreloadCount && !self.images.contains(where: { $0.0 == url }) && !self.requests.contains(url)
+        return self.images.count + self.requests.count < Int.maxPreloadCount
+            && self.images.count + self.requests.count < Int.maxPreloadCount
+            && !self.images.contains(where: { $0.0 == url })
+            && !self.requests.contains(url)
     }
     
     private func request() {
@@ -104,8 +105,6 @@ class ImageViewModel: ViewModel {
             .observeOn(MainScheduler.instance)
             .subscribe(onNext: { (result: BasicModel) in
                 if result.modified != self.model?.modified { self.model = result }
-            }, onError: { _ in
-                self.isLoadingSubject.onNext(true)
             })
             .disposed(by: self.disposeBag)
     }
